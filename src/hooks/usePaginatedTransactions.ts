@@ -21,8 +21,9 @@ export function usePaginatedTransactions(): PaginatedTransactionsResult {
       if (response === null || previousResponse === null) {
         return response
       }
-
-      return { data: response.data, nextPage: response.nextPage }
+      // bug 4, Clicking on View More button not showing correct data
+      const data = [...previousResponse.data, ...response.data]
+      return { data, nextPage: response.nextPage }
     })
   }, [fetchWithCache, paginatedTransactions])
 

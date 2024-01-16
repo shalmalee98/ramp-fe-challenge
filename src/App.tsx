@@ -21,9 +21,14 @@ export function App() {
 
   const loadAllTransactions = useCallback(async () => {
     setIsLoading(true)
-    transactionsByEmployeeUtils.invalidateData()
+    // bug 7, Approving a transaction won't persist the new value
+    // transactionsByEmployeeUtils.invalidateData()
 
     await employeeUtils.fetchAll()
+
+    // bug 5, Employees filter not available during loading more data
+    setIsLoading(false)
+
     await paginatedTransactionsUtils.fetchAll()
 
     setIsLoading(false)
@@ -64,8 +69,12 @@ export function App() {
             if (newValue === null) {
               return
             }
-
-            await loadTransactionsByEmployee(newValue.id)
+            // bug 3, Cannot select All Employees after selecting an employee
+            if (newValue.id !== "") {
+              await loadTransactionsByEmployee(newValue.id)
+            } else {
+              await loadAllTransactions()
+            }
           }}
         />
 
@@ -74,17 +83,20 @@ export function App() {
         <div className="RampGrid">
           <Transactions transactions={transactions} />
 
-          {transactions !== null && (
-            <button
-              className="RampButton"
-              disabled={paginatedTransactionsUtils.loading}
-              onClick={async () => {
-                await loadAllTransactions()
-              }}
-            >
-              View More
-            </button>
-          )}
+          {transactions !== null &&
+            // bug 6, View more button not working as expected
+            paginatedTransactions !== null &&
+            paginatedTransactions.nextPage !== null && (
+              <button
+                className="RampButton"
+                disabled={paginatedTransactionsUtils.loading}
+                onClick={async () => {
+                  await loadAllTransactions()
+                }}
+              >
+                View More
+              </button>
+            )}
         </div>
       </main>
     </Fragment>
